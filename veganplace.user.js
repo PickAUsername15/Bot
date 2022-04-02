@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VeganPlace Bot
 // @namespace    https://github.com/Squarific/Bot
-// @version      10
+// @version      11
 // @description  The bot for vegans
 // @author       Squarific
 // @match        https://www.reddit.com/r/place/*
@@ -59,12 +59,12 @@ order.sort(() => Math.random() - 0.5);
     currentPlaceCanvas = document.body.appendChild(currentPlaceCanvas);
 
     Toastify({
-        text: 'Accesstoken ophalen...',
+        text: 'Trying to get Accesstoken...',
         duration: 10000
     }).showToast();
     accessToken = await getAccessToken();
     Toastify({
-        text: 'Accesstoken opgehaald!',
+        text: 'Got Accesstoken!',
         duration: 10000
     }).showToast();
 
@@ -74,7 +74,7 @@ order.sort(() => Math.random() - 0.5);
 
 function connectSocket() {
     Toastify({
-        text: 'Verbinden met PlaceNL server...',
+        text: 'Trying to connect to VeganPlace...',
         duration: 10000
     }).showToast();
 
@@ -82,7 +82,7 @@ function connectSocket() {
 
     socket.onopen = function () {
         Toastify({
-            text: 'Verbonden met PlaceNL server!',
+            text: 'Connected with VeganPlace!',
             duration: 10000
         }).showToast();
         socket.send(JSON.stringify({ type: 'getmap' }));
@@ -99,7 +99,7 @@ function connectSocket() {
         switch (data.type.toLowerCase()) {
             case 'map':
                 Toastify({
-                    text: `Nieuwe map geladen (reden: ${data.reason ? data.reason : 'verbonden met server'})`,
+                    text: `New map loaded (reden: ${data.reason ? data.reason : 'connected with server'})`,
                     duration: 10000
                 }).showToast();
                 currentOrderCtx = await getCanvasFromUrl(`https://vegan.averysmets.com/maps/${data.data}`, currentOrderCanvas);
@@ -112,7 +112,7 @@ function connectSocket() {
 
     socket.onclose = function (e) {
         Toastify({
-            text: `PlaceNL server heeft de verbinding verbroken: ${e.reason}`,
+            text: `The connected with the server has been terminated: ${e.reason}`,
             duration: 10000
         }).showToast();
         console.error('Socketfout: ', e.reason);
@@ -123,7 +123,7 @@ function connectSocket() {
 
 async function attemptPlace() {
     if (!hasOrders) {
-        setTimeout(attemptPlace, 2000); // probeer opnieuw in 2sec.
+        setTimeout(attemptPlace, 2000); // Trying again in 2 seconds
         return;
     }
     var ctx;
@@ -131,12 +131,12 @@ async function attemptPlace() {
         const canvasUrl = await getCurrentImageUrl();
         ctx = await getCanvasFromUrl(canvasUrl, currentPlaceCanvas);
     } catch (e) {
-        console.warn('Fout bij ophalen map: ', e);
+        console.warn('Error with loading the map: ', e);
         Toastify({
-            text: 'Fout bij ophalen map. Opnieuw proberen in 15 sec...',
+            text: 'Error with loading the map. Trying again in 15 sec...',
             duration: 15000
         }).showToast();
-        setTimeout(attemptPlace, 15000); // probeer opnieuw in 15sec.
+        setTimeout(attemptPlace, 15000); // Trying again in 15sec.
         return;
     }
 
@@ -144,17 +144,17 @@ async function attemptPlace() {
     const rgbaCanvas = ctx.getImageData(0, 0, 1000, 1000).data;
 
     for (const i of order) {
-        // negeer lege order pixels.
+        // Ignoes pixel with empty sequence
         if (rgbaOrder[(i * 4) + 3] === 0) continue;
 
         const hex = rgbToHex(rgbaOrder[(i * 4)], rgbaOrder[(i * 4) + 1], rgbaOrder[(i * 4) + 2]);
-        // Deze pixel klopt.
+        // this pixel is correct
         if (hex === rgbToHex(rgbaCanvas[(i * 4)], rgbaCanvas[(i * 4) + 1], rgbaCanvas[(i * 4) + 2])) continue;
 
         const x = i % 1000;
         const y = Math.floor(i / 1000);
         Toastify({
-            text: `Pixel proberen te plaatsen op ${x}, ${y}...`,
+            text: `Trying to place pixel ${x}, ${y}...`,
             duration: 10000
         }).showToast();
 
@@ -167,7 +167,7 @@ async function attemptPlace() {
                 const nextPixelDate = new Date(nextPixel);
                 const delay = nextPixelDate.getTime() - Date.now();
                 Toastify({
-                    text: `Pixel te snel geplaatst! Volgende pixel wordt geplaatst om ${nextPixelDate.toLocaleTimeString()}.`,
+                    text: `Pixel got placed to early! The next pixel will be placed at: ${nextPixelDate.toLocaleTimeString()}.`,
                     duration: delay
                 }).showToast();
                 setTimeout(attemptPlace, delay);
@@ -176,7 +176,7 @@ async function attemptPlace() {
                 const nextPixelDate = new Date(nextPixel);
                 const delay = nextPixelDate.getTime() - Date.now();
                 Toastify({
-                    text: `Pixel geplaatst op ${x}, ${y}! Volgende pixel wordt geplaatst om ${nextPixelDate.toLocaleTimeString()}.`,
+                    text: `Pixel placed at: ${x}, ${y}! The next pixel will be placed at: ${nextPixelDate.toLocaleTimeString()}.`,
                     duration: delay
                 }).showToast();
                 setTimeout(attemptPlace, delay);
@@ -184,7 +184,7 @@ async function attemptPlace() {
         } catch (e) {
             console.warn('Fout bij response analyseren', e);
             Toastify({
-                text: `Fout bij response analyseren: ${e}.`,
+                text: `Analyzing error ${e}.`,
                 duration: 10000
             }).showToast();
             setTimeout(attemptPlace, 10000);
@@ -194,10 +194,10 @@ async function attemptPlace() {
     }
 
     Toastify({
-        text: `Alle pixels staan al op de goede plaats! Opnieuw proberen in 30 sec...`,
+        text: `All pixels are in the correct place! Trying again in 30 sec...`,
         duration: 30000
     }).showToast();
-    setTimeout(attemptPlace, 30000); // probeer opnieuw in 30sec.
+    setTimeout(attemptPlace, 30000); // Trying againin 30sec.
 }
 
 function place(x, y, color) {
